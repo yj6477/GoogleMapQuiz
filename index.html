@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /*CSS resets to make sure style are set in right*/
+      div, h1, h2, h3, p, img {
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        margin: 0;
+        padding: 0;
+        background-color:#359bb5;
+      /*#e8ddbd*/
+      }
+      body {
+        padding: 0;
+        background-color:#359bb5;
+
+        font-family: Georgia, Times, serif;
+        font-size: 100%;
+      }
+      /*CSS style to elements, class, id's*/	
+      #container {
+        background-color:#359bb5;
+        /*height:2500px;*/
+        width: 1100px;
+        /*padding: 5px;*/
+        padding-bottom:5px;
+        padding-top: 5px;
+        padding-right:10px;
+        padding-left:10px;
+        margin: 0 auto;
+      }
+      /* The text display section */	
+      .DisplayQuestions{
+        
+        padding-top: 5px;
+        padding-left: 5px;
+        width: 400px;
+        height: 50px;
+        margin-bottom: 5px;
+      }
+
+      /* The text display section */				
+      .displaysection {		
+        text-align:center;
+        padding: 0.5em;
+        height:550px;
+        width: 400px;
+        float: left;
+			}
+      #findLocation{
+        margin-bottom: 1em;
+        font-size: 1.5em;
+        background: #eaecc4;
+      }
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 600px; 
+	      width: 600px;
+	      float: right;
+
+      }
+      #Location1, #Location2, #Location3, #Location4,#Location5, #results, .timer{
+        display: none;
+      }
+      .timer{
+        font-size: 2em;
+      }
+      #results{
+        letter-spacing: 0.2em;
+      }
+
+      /*animation*/
+      @keyframes text {
+        0%{
+          color: black;
+        }
+        30%{
+          letter-spacing: 0.4em;
+        }
+        85%{
+          letter-spacing: 0.2em;
+        }
+        
+      }
+    </style>
+  </head>
+  <body>
+    <div id = "container">
+      
+          <!--class to display results and questions-->
+      
+        <div class = "displaysection" >
+          <h1 align = "left"> Map Quiz. Please double click on the map the location of:  </h1>
+          <div class = "DisplayQuestions" id = "Location1">
+            <p id ="findLocation"></p>
+          </div>
+          <div class = "DisplayQuestions" id = "Location2">
+            <p id ="findLocation"></p>
+          </div>
+          <div class = "DisplayQuestions" id = "Location3">
+            <p id ="findLocation"></p>
+          </div>
+          <div class = "DisplayQuestions" id = "Location4">
+            <p id ="findLocation"></p>
+          </div>
+          <div class = "DisplayQuestions" id = "Location5">
+            <p id ="findLocation"></p>
+          </div>
+          <div class = "DisplayQuestions" id = "results">
+            <p id = "findLocation"></p>
+          </div>
+          <div class = "timer">
+            <p>00:00:00</p>
+          </div>  
+
+        </div>
+        <!--google map div	-->
+          <div id = "map" ></div>
+    </div>
+    
+    <!--script section-->
+    <script>
+        var map;
+        const results = document.querySelector("#results");
+        const theTimer = document.querySelector(".timer");
+
+        //get timer from project TTT
+        function getTimer(){
+          return (m < 10? "0" + m:m) + ":"+(s<10 ? "0" + s:s) + ":" + (ms<10 ? "0" + ms: ms);
+        }
+        var ms = 0, s = 0, m = 0;
+        var timer;
+        //run time function
+        function run(){
+          theTimer.textContent = getTimer();
+
+          ms++;
+          if(ms == 100){
+            ms = 0;
+            s++;
+          }
+
+          if (s == 60){
+            s = 0;
+            m++;
+          }
+        }
+        //stop time function
+        function stopTimer(){
+          clearInterval(timer);
+          timer = false;
+          theTimer.style.display = "block";
+        }
+
+        //start the timer
+        function start(){
+          if(!timer){
+            timer = setInterval(run, 10);
+          }
+        }
+        var questionsList = [
+          document.querySelector("#Location1"),
+          document.querySelector("#Location2"),
+          document.querySelector("#Location3"),
+          document.querySelector("#Location4"),
+          document.querySelector("#Location5")
+        ];
+        var buildingNames = ['Oviatt Library', 'Student Recreation Center', 'Bayramian Hall', 'Sierra Hall and Jerome Richfield Hall','Live Oak Hall'];
+
+        //counting the number of correct answers
+        var correct = 0;
+        //check when game is over
+        var finish = false;
+        //counter fo rnumber of questions
+        var counter = 0;
+        //bound lists for the buildings
+          var buildingList = [
+            library = {
+              north: 34.24039402701694,
+              south: 34.23949081770176,
+              east: -118.5285885725865,
+              west: -118.53010602122254
+            },
+            src = {
+              north:34.24046932966129,
+              south:34.23949085334102,
+              east:-118.52468941959384,
+              west:-118.52515982867104
+            },   
+            BH ={
+              north:34.24070767473463,
+              south:34.23982955796971,
+              east:-118.53018258365634,
+              west:-118.53150276396971
+            },  
+            SH = {
+              north:34.23905178975709,
+              south:34.23814856604086,
+              east:-118.53007636225182,
+              west:-118.53142689153789
+            },   
+            
+            LO = {
+              north:34.23846218648499,
+              south:34.23814856604086,
+              east:-118.52755739751598,
+              west:-118.52890792680206
+            }
+          ];
+        function initMap() {
+            longLat = { lat: 34.23855, lng: -118.5278533 }; /* 34.23855,-118.5278533 */
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: longLat,
+                zoom: 16.5,
+                mapTypeId: google.maps.MapTypeId.HYBRID,
+                disableDoubleClickZoom: true,
+                disableDefaultUI: true,
+                styles: [
+                    //disable the labels
+                    { "elementType": "labels", "stylers": [{ "visibility": "off" }] },
+                    { "featureType": "landscape.man_made", "elementType": "geometry", "stylers": [{ "weight": 0.9 }, { "visibility": "simplified" }] }]
+                
+        });         
+            //disable drag and zoom option of the map
+           map.setOptions({draggable: false, zoomControl: false, scrollwheel: false, disableDoubleClickZoom: true});
+      }
+      
+
+      
+      function Quizzes(){
+        //display the first question
+        questionsList[counter].querySelector("p").innerHTML = buildingNames[counter];
+        questionsList[counter].style.display = "block";
+
+        if(counter < 4){
+          map.addListener('dblclick', function (e){
+            //start timer once first double click
+            start();
+            if(!finish){
+              //get the current bound
+              var current = new google.maps.Rectangle({
+                bounds: buildingList[counter]
+              });
+
+              //if selected point is correct show green rectangle
+              if(current.getBounds().contains(e.latLng)){
+                var rectangle = new google.maps.Rectangle({
+                  strokeColor: 'green',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
+                  fillColor: 'green',
+                  fillOpacity: 0.35,
+                  map: map,
+                  bounds: buildingList[counter]
+                });
+                questionsList[counter].querySelector("p").style.backgroundColor = "green";
+                correct++;
+              }
+              //if incorrect then show red
+              else{
+                var rectangle = new google.maps.Rectangle({
+                  strokeColor: 'red',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 2,
+                  fillColor: 'red',
+                  fillOpacity: 0.35,
+                  map: map,
+                  bounds: buildingList[counter]
+                });
+                questionsList[counter].querySelector("p").style.backgroundColor = "red";
+              }
+              //get the next question
+              if(counter < 4){
+              counter++;
+              questionsList[counter].querySelector("p").innerHTML = buildingNames[counter];
+              questionsList[counter].style.display = "block";  
+              }
+              //once it goes through all game over
+              else{
+                finish = true;
+                results.querySelector("p").innerHTML = "Correct: " + correct + " Incorrect: " + (5-correct);
+                results.style.display = "block";
+                results.style.animation = "text 2s";
+                stopTimer(); 
+              }
+              console.log("I've been clicked at: Lat: " + e.latLng.lat() + " Long: " + e.latLng.lng());
+            }
+          });
+        }
+
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0ii7cVWLiwNmudQA6uWh9_nzD_3yPEO8&callback=initMap"
+    async defer></script>
+    <body onLoad="Quizzes()">
+  </body>
+</html>
